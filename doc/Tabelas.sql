@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS Plano(
     tipo		TINYINT		UNSIGNED	NOT NULL,
     cadencia		SMALLINT	UNSIGNED,
     custo_cadencia	FLOAT(6,4),
-    fk_operadora	BIGINT		UNSIGNED	NOT NULL	references Operadora(cnpj),
+    operadora		BIGINT		UNSIGNED	NOT NULL,
+    CONSTRAINT		fk_plano_operadora	foreign key (operadora) references Operadora(cnpj),
     PRIMARY KEY (id)
 );
 
@@ -26,7 +27,8 @@ CREATE TABLE IF NOT EXISTS Central(
     id			SMALLINT	UNSIGNED	NOT NULL,
     regiao		TINYINT		UNSIGNED,
     cap_ligacoes	SMALLINT	UNSIGNED,
-    fk_operadora	BIGINT		UNSIGNED	NOT NULL	references Operadora(cnpj),
+    operadora		BIGINT		UNSIGNED	NOT NULL,
+    CONSTRAINT		fk_central_operadora	foreign key (operadora) references Operadora(cnpj),
     PRIMARY KEY (id)
 );
 
@@ -38,7 +40,8 @@ CREATE TABLE IF NOT EXISTS ERB(
     latitude		FLOAT(8,6),
     longitude		FLOAT(8,6),
     qos			BIT(1),
-    fk_operadora	BIGINT		UNSIGNED	NOT NULL	references Operadora(cnpj),
+    operadora		BIGINT		UNSIGNED	NOT NULL,
+    CONSTRAINT		fk_erb_operadora	foreign key (operadora) references Operadora(cnpj),
     PRIMARY KEY(id)
 );
 
@@ -47,7 +50,8 @@ CREATE TABLE IF NOT EXISTS Numero(
     id			BIGINT		UNSIGNED	NOT NULL,
     n_telefone		VARCHAR(15)			NOT NULL,
     credito		FLOAT(7,5),
-    fk_operadora	BIGINT		UNSIGNED	NOT NULL	references Operadora(cnpj),
+    operadora		BIGINT		UNSIGNED	NOT NULL,
+    CONSTRAINT		fk_numero_operadora	foreign key (operadora) references Operadora(cnpj),
     PRIMARY KEY(id)
 );
 
@@ -58,8 +62,10 @@ CREATE TABLE IF NOT EXISTS Contrato(
     fidelizacao		BIT(1),
     vigencia_i   	DATETIME,
     vigencia_t   	DATETIME,
-    fk_plano 		MEDIUMINT	UNSIGNED	NOT NULL	references Plano(id),
-    fk_numero		BIGINT		UNSIGNED	NOT NULL	references Numero(id),
+    plano		MEDIUMINT	UNSIGNED	NOT NULL,
+    numero		BIGINT		UNSIGNED	NOT NULL,
+    CONSTRAINT		fk_contrato_plano	foreign key (plano) references Plano(id),
+    CONSTRAINT		fk_contrato_numero	foreign key (numero) references Numero(id),
     PRIMARY KEY (id)
 );
 
@@ -70,14 +76,16 @@ CREATE TABLE IF NOT EXISTS Chamada(
     origem		TINYINT		UNSIGNED	NOT NULL,
     destino		TINYINT		UNSIGNED	NOT NULL,
     duracao		SMALLINT	UNSIGNED	NOT NULL,
-    fk_plano	 	MEDIUMINT	UNSIGNED	NOT NULL	references Plano(id),	
+    plano		MEDIUMINT	UNSIGNED	NOT NULL,
+    CONSTRAINT		fk_chamada_plano	foreign key (plano) references Plano(id),
     PRIMARY KEY (id)
 );
 
 
 CREATE TABLE IF NOT EXISTS Telefone(
     id			BIGINT		UNSIGNED	NOT NULL,	
-    fk_pessoa		INT		UNSIGNED	NOT NULL	references Pessoa(id),
+    pessoa		INT		UNSIGNED	NOT NULL,
+    CONSTRAINT		fk_telefone_pessoa	foreign key (pessoa) references Pessoa(id),
     IMEI		BIGINT		UNSIGNED,
     PRIMARY KEY (id)
 );
@@ -86,7 +94,9 @@ CREATE TABLE IF NOT EXISTS Chip(
     id			BIGINT		UNSIGNED	NOT NULL,
     fk_erb		SMALLINT	UNSIGNED	NOT NULL	references ERB(id),
     ICCID		BIGINT		UNSIGNED	NOT NULL,
-    fk_numero		BIGINT		UNSIGNED	NOT NULL	references Numero(id),
-    fk_telefone		BIGINT		UNSIGNED	NOT NULL	references Telefone(id),
+    numero		BIGINT		UNSIGNED	NOT NULL,
+    telefone		BIGINT		UNSIGNED	NOT NULL,
+    CONSTRAINT		fk_chip_numero		foreign key (numero) references Numero(id),
+    CONSTRAINT		fk_chip_telefone  	foreign key (telefone)references Telefone(id),
     PRIMARY KEY (id)
 );
