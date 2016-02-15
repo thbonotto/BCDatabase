@@ -1,102 +1,81 @@
-CREATE TABLE IF NOT EXISTS Operadora(
-    cnpj		BIGINT		UNSIGNED	NOT NULL,
-    nome		VARCHAR(30)	NOT NULL,
-    PRIMARY KEY(cnpj)
+create table if not exists operadora (
+    id tinyint unsigned auto_increment primary key,
+    cnpj bigint unsigned not null unique,
+    nome varchar(30)
 );
 
-CREATE TABLE IF NOT EXISTS Pessoa(
-    id			INT		UNSIGNED	NOT NULL,
-    documento		VARCHAR(18)	NOT NULL,
-    nome		VARCHAR(60)	NOT NULL,
-    endereco		VARCHAR(60)	NOT NULL,
-    PRIMARY KEY(id)
+create table if not exists central (
+  id tinyint auto_increment primary key,
+  operadora tinyint unsigned not null,
+  regiao varchar(10),
+  capacidadeDeLigacoes smallint unsigned,
+  constraint fk_central_operadora foreign key (operadora) references operadora(id)
 );
 
-CREATE TABLE IF NOT EXISTS Plano(
-    id			MEDIUMINT	UNSIGNED	NOT NULL,
-    tipo		TINYINT		UNSIGNED	NOT NULL,
-    cadencia		SMALLINT	UNSIGNED,
-    custo_cadencia	FLOAT(6,4),
-    operadora		BIGINT		UNSIGNED	NOT NULL,
-    CONSTRAINT		fk_plano_operadora	foreign key (operadora) references Operadora(cnpj),
-    PRIMARY KEY (id)
+create table if not exists erb (
+    id int unsigned primary key,
+    operadora tinyint unsigned not null,
+    qos smallint unsigned default 500,
+    limite smallint unsigned default 2500,
+    area tinyint unsigned default 48,
+    longitude float(8,6),
+    latitude float(9,6),
+    constraint fk_erb_operadora foreign key (operadora) references operadora(id)
 );
 
-
-CREATE TABLE IF NOT EXISTS Central(
-    id			SMALLINT	UNSIGNED	NOT NULL,
-    regiao		TINYINT		UNSIGNED,
-    cap_ligacoes	SMALLINT	UNSIGNED,
-    operadora		BIGINT		UNSIGNED	NOT NULL,
-    CONSTRAINT		fk_central_operadora	foreign key (operadora) references Operadora(cnpj),
-    PRIMARY KEY (id)
+create table if not exists numero (
+  id int unsigned primary key,
+  numero int unsigned unique,
+  operadora tinyint unsigned,
+  credito int,
+  constraint fk_numero_operadora foreign key (operadora) references operadora(id)
 );
 
-
-CREATE TABLE IF NOT EXISTS ERB(
-    id			SMALLINT	UNSIGNED	NOT NULL,
-    capacidade		SMALLINT	UNSIGNED,
-    area		TINYINT		UNSIGNED,
-    latitude		FLOAT(8,6),
-    longitude		FLOAT(8,6),
-    qos			BIT(1),
-    operadora		BIGINT		UNSIGNED	NOT NULL,
-    CONSTRAINT		fk_erb_operadora	foreign key (operadora) references Operadora(cnpj),
-    PRIMARY KEY(id)
+create table if not exists pessoa (
+  id int unsigned auto_increment primary key,
+  documento varchar(20) not null unique,
+  nome varchar(20),
+  endereco varchar(50)
 );
 
-
-CREATE TABLE IF NOT EXISTS Numero(
-    id			BIGINT		UNSIGNED	NOT NULL,
-    n_telefone		VARCHAR(15)			NOT NULL,
-    credito		FLOAT(7,5),
-    operadora		BIGINT		UNSIGNED	NOT NULL,
-    CONSTRAINT		fk_numero_operadora	foreign key (operadora) references Operadora(cnpj),
-    PRIMARY KEY(id)
+create table if not exists imei (
+  id int unsigned primary key, 
+  numero int unsigned unique,
+  proprietario int unsigned,
+  numeroSerial varchar(30),
+  constraint fk_imei_proprietario foreign key (proprietario) references pessoa(id)
 );
 
-
-CREATE TABLE IF NOT EXISTS Contrato(
-    id			BIGINT		UNSIGNED	NOT NULL,
-    end_cobranca	VARCHAR(60),
-    fidelizacao		BIT(1),
-    vigencia_i   	DATETIME,
-    vigencia_t   	DATETIME,
-    plano		MEDIUMINT	UNSIGNED	NOT NULL,
-    numero		BIGINT		UNSIGNED	NOT NULL,
-    CONSTRAINT		fk_contrato_plano	foreign key (plano) references Plano(id),
-    CONSTRAINT		fk_contrato_numero	foreign key (numero) references Numero(id),
-    PRIMARY KEY (id)
+create table if not exists chip (
+  id tinyint unsigned auto_increment primary key,
+  iccid varchar(20) not null unique,
+  registro int unsigned,
+  vinculo int unsigned,
+  associacao int unsigned,
+  constraint fk_chip_registro foreign key (registro) references erb(id),
+  constraint fk_chip_vinculo foreign key (vinculo) references numero(id),
+  constraint fk_chip_associacao foreign key (associacao) references imei(id)
 );
 
-
-CREATE TABLE IF NOT EXISTS Chamada(
-    id			BIGINT		UNSIGNED	NOT NULL,
-    hora		DATETIME,
-    origem		TINYINT		UNSIGNED	NOT NULL,
-    destino		TINYINT		UNSIGNED	NOT NULL,
-    duracao		SMALLINT	UNSIGNED	NOT NULL,
-    plano		MEDIUMINT	UNSIGNED	NOT NULL,
-    CONSTRAINT		fk_chamada_plano	foreign key (plano) references Plano(id),
-    PRIMARY KEY (id)
+create table if not exists plano (
+  id int unsigned auto_increment primary key,
+  operadora tinyint unsigned,
+  vigenciaInicio date,
+  vigenciaTermino date,
+  fidelizacao date,
+  tipo varchar(10),
+  cadencia varchar(10),
+  custoCadencia varchar(10),
+  constraint fk_plano_operadora foreign key (operadora) references operadora(id)
 );
 
-
-CREATE TABLE IF NOT EXISTS Telefone(
-    id			BIGINT		UNSIGNED	NOT NULL,	
-    pessoa		INT		UNSIGNED	NOT NULL,
-    CONSTRAINT		fk_telefone_pessoa	foreign key (pessoa) references Pessoa(id),
-    IMEI		BIGINT		UNSIGNED,
-    PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS Chip(
-    id			BIGINT		UNSIGNED	NOT NULL,
-    fk_erb		SMALLINT	UNSIGNED	NOT NULL	references ERB(id),
-    ICCID		BIGINT		UNSIGNED	NOT NULL,
-    numero		BIGINT		UNSIGNED	NOT NULL,
-    telefone		BIGINT		UNSIGNED	NOT NULL,
-    CONSTRAINT		fk_chip_numero		foreign key (numero) references Numero(id),
-    CONSTRAINT		fk_chip_telefone  	foreign key (telefone)references Telefone(id),
-    PRIMARY KEY (id)
+create table if not exists contrato (
+  id smallint unsigned auto_increment primary key,
+  contratante int unsigned not null,
+  contratado tinyint unsigned not null,
+  plano int unsigned,
+  enderecoCobranca varchar(50),
+  constraint fk_contrato_contratante foreign key (contratante) references pessoa(id),
+  constraint fk_contrato_contratado foreign key (contratado) references operadora(id),
+  constraint fk_contrato_plano foreign key (plano) references plano(id)
 );
