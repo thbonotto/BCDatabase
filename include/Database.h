@@ -7,6 +7,7 @@
 
 #pragma once
 #include <stdint.h>
+#include <string>
 
 namespace bcd29008 {
 
