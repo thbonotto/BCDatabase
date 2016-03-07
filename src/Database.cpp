@@ -41,7 +41,7 @@ void Database::executeSQL(std::string sql) {
 }
 void Database::cadastrarPessoa(std::string nome, std::string documento,
 		std::string endereco) {
-	std::string sql { "INSERT INTO bonotto_pessoa (nome,documento,endereco) "
+	std::string sql { "INSERT INTO pessoa (nome,documento,endereco) "
 			"VALUES ('" + nome + "','" + documento + "','" + endereco + "');" };
 
 	executeSQL(sql);
@@ -49,7 +49,7 @@ void Database::cadastrarPessoa(std::string nome, std::string documento,
 }
 void Database::cadastrarOperadora(std::string nome, std::string cnpj) {
 
-	std::string sql { "INSERT INTO bonotto_operadora (cnpj,nome) "
+	std::string sql { "INSERT INTO operadora (cnpj,nome) "
 			"VALUES ('" + cnpj + "','" + nome + "');" };
 	executeSQL(sql);
 
@@ -60,7 +60,7 @@ void Database::cadastrarNumero(std::string numero) {
 	std::vector<int> ids;
 	std::vector<string> nomes;
 	stmt = con->createStatement();
-	res = stmt->executeQuery("SELECT id,nome from bonotto_operadora;");
+	res = stmt->executeQuery("SELECT id,nome from operadora;");
 	while (res->next()) {
 		nomes.push_back(res->getString("nome"));
 		ids.push_back(res->getInt("id"));
@@ -81,7 +81,7 @@ void Database::cadastrarNumero(std::string numero) {
 	std::getline(std::cin, read);
 	int item = atoi(read.c_str());
 	if (std::find(ids.begin(), ids.end(), item) != ids.end()) {
-		stmt->execute("INSERT INTO bonotto_numero (numero,operadora) "
+		stmt->execute("INSERT INTO numero (numero,operadora) "
 				"VALUES ('" + numero + "','" + read + "');");
 	} else {
 		delete res;
@@ -98,7 +98,7 @@ void Database::cadastrarIMEI(std::string imei) {
 	std::vector<string> nomes;
 	std::vector<string> cpfs;
 	stmt = con->createStatement();
-	res = stmt->executeQuery("SELECT id, nome, documento from bonotto_pessoa;");
+	res = stmt->executeQuery("SELECT id, nome, documento from pessoa;");
 	while (res->next()) {
 		cpfs.push_back(res->getString("documento"));
 		nomes.push_back(res->getString("nome"));
@@ -119,7 +119,7 @@ void Database::cadastrarIMEI(std::string imei) {
 	std::getline(std::cin, read);
 	int item = atoi(read.c_str());
 	if (std::find(ids.begin(), ids.end(), item) != ids.end()) {
-		stmt->execute("INSERT INTO bonotto_imei (proprietario,numeroSerial) "
+		stmt->execute("INSERT INTO imei (proprietario,numeroSerial) "
 				"VALUES ('" + read + "','" + imei + "');");
 	} else {
 		delete res;
@@ -135,7 +135,7 @@ void Database::cadastrarChip(std::string iccid) {
 	std::vector<int> ids;
 	std::vector<string> imeis;
 	stmt = con->createStatement();
-	res = stmt->executeQuery("SELECT id,numeroSerial from bonotto_imei;");
+	res = stmt->executeQuery("SELECT id,numeroSerial from imei;");
 	while (res->next()) {
 		imeis.push_back(res->getString("numeroSerial"));
 		ids.push_back(res->getInt("id"));
@@ -169,7 +169,7 @@ void Database::cadastrarChip(std::string iccid) {
 	ids.clear();
 	imeis.clear();
 	stmt = con->createStatement();
-	res = stmt->executeQuery("SELECT id, numero from bonotto_numero;");
+	res = stmt->executeQuery("SELECT id, numero from numero;");
 	while (res->next()) {
 		imeis.push_back(res->getString("numero"));
 		ids.push_back(res->getInt("id"));
@@ -189,7 +189,7 @@ void Database::cadastrarChip(std::string iccid) {
 	std::getline(std::cin, read);
 	item = atoi(read.c_str());
 	if (std::find(ids.begin(), ids.end(), item) != ids.end()) {
-		stmt->execute("INSERT INTO bonotto_chip (iccid,vinculo,associacao) "
+		stmt->execute("INSERT INTO chip (iccid,vinculo,associacao) "
 				"VALUES ('" + iccid + "','" + read + "','" + imeiId + "');");
 	} else {
 		delete res;
@@ -206,7 +206,7 @@ void Database::cadastrarPlano(std::string plano) {
 	std::vector<int> ids;
 	std::vector<string> nomes;
 	stmt = con->createStatement();
-	res = stmt->executeQuery("SELECT id,nome from bonotto_operadora;");
+	res = stmt->executeQuery("SELECT id,nome from operadora;");
 	while (res->next()) {
 		nomes.push_back(res->getString("nome"));
 		ids.push_back(res->getInt("id"));
@@ -227,7 +227,7 @@ void Database::cadastrarPlano(std::string plano) {
 	std::getline(std::cin, read);
 	int item = atoi(read.c_str());
 	if (std::find(ids.begin(), ids.end(), item) != ids.end()) {
-		stmt->execute("INSERT INTO bonotto_plano (operadora,tipo) "
+		stmt->execute("INSERT INTO plano (operadora,tipo) "
 				"VALUES ('" + read + "','" + plano + "');");
 	} else {
 		delete res;
@@ -245,7 +245,7 @@ void Database::cadastrarContrato() {
 	std::vector<int> ids;
 	std::vector<string> PessoaPlanoOperadora;
 	stmt = con->createStatement();
-	res = stmt->executeQuery("SELECT id,nome from bonotto_pessoa;");
+	res = stmt->executeQuery("SELECT id,nome from pessoa;");
 	while (res->next()) {
 		PessoaPlanoOperadora.push_back(res->getString("nome"));
 		ids.push_back(res->getInt("id"));
@@ -277,7 +277,7 @@ void Database::cadastrarContrato() {
 	ids.clear();
 	PessoaPlanoOperadora.clear();
 	stmt = con->createStatement();
-	res = stmt->executeQuery("SELECT id, tipo from bonotto_plano;");
+	res = stmt->executeQuery("SELECT id, tipo from plano;");
 	while (res->next()) {
 		PessoaPlanoOperadora.push_back(res->getString("tipo"));
 		ids.push_back(res->getInt("id"));
@@ -306,7 +306,7 @@ void Database::cadastrarContrato() {
 	ids.clear();
 	PessoaPlanoOperadora.clear();
 	stmt = con->createStatement();
-	res = stmt->executeQuery("SELECT id, nome from bonotto_operadora;");
+	res = stmt->executeQuery("SELECT id, nome from operadora;");
 	while (res->next()) {
 		PessoaPlanoOperadora.push_back(res->getString("nome"));
 		ids.push_back(res->getInt("id"));
@@ -326,7 +326,7 @@ void Database::cadastrarContrato() {
 	item = atoi(read.c_str());
 	if (std::find(ids.begin(), ids.end(), item) != ids.end()) {
 		stmt->execute(
-				"INSERT INTO bonotto_contrato1 (contratante, operadora, plano) "
+				"INSERT INTO contrato (contratante, operadora, plano) "
 						"VALUES ('" + pessoaId + "','" + read + "','" + planoId
 						+ "');");
 	} else {
@@ -348,7 +348,7 @@ void Database::atualizarContrato() {
 	std::vector<string> plano;
 	stmt = con->createStatement();
 	res = stmt->executeQuery(
-			"SELECT id,contratante,operadora,plano from bonotto_contrato1;");
+			"SELECT id,contratante,operadora,plano from contrato;");
 	while (res->next()) {
 		contratante.push_back(res->getString("contratante"));
 		operadora.push_back(res->getString("operadora"));
@@ -390,7 +390,7 @@ void Database::atualizarContrato() {
 			ids.clear();
 			stmt = con->createStatement();
 			res = stmt->executeQuery(
-					"SELECT id, nome, documento from bonotto_pessoa;");
+					"SELECT id, nome, documento from pessoa;");
 			while (res->next()) {
 				cpfs.push_back(res->getString("documento"));
 				contratante.push_back(res->getString("nome"));
@@ -411,7 +411,7 @@ void Database::atualizarContrato() {
 			item = atoi(read.c_str());
 			if (std::find(ids.begin(), ids.end(), item) != ids.end())
 				executeSQL(
-						"UPDATE bonotto_contrato1 set contratante = '" + read
+						"UPDATE contrato set contratante = '" + read
 								+ "' where id ='" + contratoId + "';");
 			else
 				throw "Opção invalida";
@@ -420,7 +420,7 @@ void Database::atualizarContrato() {
 			ids.clear();
 			operadora.clear();
 			stmt = con->createStatement();
-			res = stmt->executeQuery("SELECT id, nome from bonotto_operadora;");
+			res = stmt->executeQuery("SELECT id, nome from operadora;");
 			while (res->next()) {
 				operadora.push_back(res->getString("nome"));
 				ids.push_back(res->getInt("id"));
@@ -441,7 +441,7 @@ void Database::atualizarContrato() {
 			item = atoi(read.c_str());
 			if (std::find(ids.begin(), ids.end(), item) != ids.end())
 				executeSQL(
-						"UPDATE bonotto_contrato1 set operadora = '" + read
+						"UPDATE contrato set operadora = '" + read
 								+ "' where id ='" + contratoId + "';");
 			else
 				throw "Opção invalida";
@@ -450,7 +450,7 @@ void Database::atualizarContrato() {
 			ids.clear();
 			plano.clear();
 			stmt = con->createStatement();
-			res = stmt->executeQuery("SELECT id, tipo from bonotto_plano;");
+			res = stmt->executeQuery("SELECT id, tipo from plano;");
 			while (res->next()) {
 				plano.push_back(res->getString("tipo"));
 				ids.push_back(res->getInt("id"));
@@ -470,7 +470,7 @@ void Database::atualizarContrato() {
 			item = atoi(read.c_str());
 			if (std::find(ids.begin(), ids.end(), item) != ids.end())
 				executeSQL(
-						"UPDATE bonotto_contrato1 set plano = '" + read
+						"UPDATE contrato set plano = '" + read
 								+ "' where id ='" + contratoId + "';");
 			else
 				throw "Opção invalida";
@@ -502,7 +502,7 @@ int Database::getOperadoraIdFromName(const std::string& nome) {
 	int id;
 	stmt = con->createStatement();
 	res = stmt->executeQuery(
-			"SELECT id from bonotto_operadora where bonotto_operadora ='" + nome
+			"SELECT id from operadora where operadora ='" + nome
 					+ "'");
 	if (res->next()) {
 		id = res->getInt("id");
@@ -519,7 +519,7 @@ std::string Database::getOperadoraNameFromId(std::string id) {
 	std::string nome;
 	stmt = con->createStatement();
 	res = stmt->executeQuery(
-			"SELECT nome from bonotto_operadora where id ='" + id + "' ;");
+			"SELECT nome from operadora where id ='" + id + "' ;");
 	if (res->next()) {
 		nome = res->getString("nome");
 	}
@@ -533,7 +533,7 @@ std::string Database::getPlanoTipoFromId(std::string id) {
 	std::string tipo;
 	stmt = con->createStatement();
 	res = stmt->executeQuery(
-			"SELECT tipo from bonotto_plano where id ='" + id + "' ;");
+			"SELECT tipo from plano where id ='" + id + "' ;");
 	if (res->next()) {
 		tipo = res->getString("tipo");
 	}
@@ -548,7 +548,7 @@ std::string Database::getPessoaNameFromId(std::string id) {
 	std::string nome;
 	stmt = con->createStatement();
 	res = stmt->executeQuery(
-			"SELECT nome from bonotto_pessoa where id ='" + id + "' ;");
+			"SELECT nome from pessoa where id ='" + id + "' ;");
 	if (res->next()) {
 		nome = res->getString("nome");
 	}

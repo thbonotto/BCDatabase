@@ -101,15 +101,15 @@ int main(int argc, char** argv) {
 					db.atualizarContrato();
 					break;
 				case 9:
-					db.executeSQL("DROP TABLE if exists bonotto_contrato1");
-					db.executeSQL("DROP TABLE if exists bonotto_plano");
-					db.executeSQL("DROP TABLE if exists bonotto_chip");
-					db.executeSQL("DROP TABLE if exists bonotto_imei");
-					db.executeSQL("DROP TABLE if exists bonotto_numero");
-					db.executeSQL("DROP TABLE if exists bonotto_central");
-					db.executeSQL("DROP TABLE if exists bonotto_erb");
-					db.executeSQL("DROP TABLE if exists bonotto_pessoa");
-					db.executeSQL("DROP TABLE if exists bonotto_operadora");
+					db.executeSQL("DROP TABLE if exists contrato");
+					db.executeSQL("DROP TABLE if exists plano");
+					db.executeSQL("DROP TABLE if exists chip");
+					db.executeSQL("DROP TABLE if exists imei");
+					db.executeSQL("DROP TABLE if exists numero");
+					db.executeSQL("DROP TABLE if exists central");
+					db.executeSQL("DROP TABLE if exists erb");
+					db.executeSQL("DROP TABLE if exists pessoa");
+					db.executeSQL("DROP TABLE if exists operadora");
 					break;
 				case 10:
 					cout << "Bye" << endl;
