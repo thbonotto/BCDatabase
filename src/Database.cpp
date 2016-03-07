@@ -326,7 +326,7 @@ void Database::cadastrarContrato() {
 	item = atoi(read.c_str());
 	if (std::find(ids.begin(), ids.end(), item) != ids.end()) {
 		stmt->execute(
-				"INSERT INTO contrato (contratante, operadora, plano) "
+				"INSERT INTO contrato (contratante, contratado, plano) "
 						"VALUES ('" + pessoaId + "','" + read + "','" + planoId
 						+ "');");
 	} else {
@@ -348,10 +348,10 @@ void Database::atualizarContrato() {
 	std::vector<string> plano;
 	stmt = con->createStatement();
 	res = stmt->executeQuery(
-			"SELECT id,contratante,operadora,plano from contrato;");
+			"SELECT id,contratante,contratado,plano from contrato;");
 	while (res->next()) {
 		contratante.push_back(res->getString("contratante"));
-		operadora.push_back(res->getString("operadora"));
+		operadora.push_back(res->getString("contratado"));
 		plano.push_back(res->getString("plano"));
 		ids.push_back(res->getInt("id"));
 	}
@@ -441,7 +441,7 @@ void Database::atualizarContrato() {
 			item = atoi(read.c_str());
 			if (std::find(ids.begin(), ids.end(), item) != ids.end())
 				executeSQL(
-						"UPDATE contrato set operadora = '" + read
+						"UPDATE contrato set contratado = '" + read
 								+ "' where id ='" + contratoId + "';");
 			else
 				throw "Opção invalida";
