@@ -6,6 +6,7 @@
  */
 
 #include "Database.h"
+#include <stdlib.h>
 #include <fstream>
 #include <streambuf>
 #include <sstream>
@@ -15,18 +16,19 @@
 using namespace std;
 namespace bcd29008 {
 
-Database::Database(const std::string& host, const std::string& schema, const std::string&  user,const std::string&  pass) {
+Database::Database(const std::string& host, const std::string& schema,
+		const std::string& user, const std::string& pass) :
+		host { host }, schema { schema }, user { user }, pass { pass } {
 
+	/* Create a connection */
+	driver = get_driver_instance();
 
-	  /* Create a connection */
-	  driver = get_driver_instance();
-
-	  //"tcp://127.0.0.1:3306"
-	  con = driver->connect(host, user, pass);
-	  bool myTrue = true;
-	  con->setClientOption("CLIENT_MULTI_STATEMENTS", &myTrue);
-	  /* Connect to the MySQL test database */
-	  con->setSchema(schema);
+	//"tcp://127.0.0.1:3306"
+	con = driver->connect(host, user, pass);
+	bool myTrue = true;
+	con->setClientOption("CLIENT_MULTI_STATEMENTS", &myTrue);
+	/* Connect to the MySQL test database */
+	con->setSchema(schema);
 
 }
 void Database::executeSQL(std::string sql) {
@@ -37,22 +39,59 @@ void Database::executeSQL(std::string sql) {
 	std::cout << "Ok" << std::endl;
 	delete stmt;
 }
-void Database::cadastrarPessoa(std::string nome, std::string documento, std::string endereco){
-	std::string sql{"INSERT INTO bonotto_pessoa (nome,documento,endereco) "
-				"VALUES ('"+nome+"','"+documento+"','"+endereco+"');"};
+void Database::cadastrarPessoa(std::string nome, std::string documento,
+		std::string endereco) {
+	std::string sql { "INSERT INTO bonotto_pessoa (nome,documento,endereco) "
+			"VALUES ('" + nome + "','" + documento + "','" + endereco + "');" };
 
-		executeSQL(sql);
-
-}
-void Database::cadastrarOperadora(std::string nome, std::string cnpj){
-
-	std::string sql{"INSERT INTO bonotto_operadora (cnpj,nome) "
-			"VALUES ('"+cnpj+"','"+nome+"');"};
 	executeSQL(sql);
 
 }
+void Database::cadastrarOperadora(std::string nome, std::string cnpj) {
+
+	std::string sql { "INSERT INTO bonotto_operadora (cnpj,nome) "
+			"VALUES ('" + cnpj + "','" + nome + "');" };
+	executeSQL(sql);
+
+}
+void Database::cadastrarNumero(std::string numero) {
+	sql::Statement *stmt;
+	sql::ResultSet *res;
+	std::vector<int> ids;
+	std::vector<string> nomes;
+	stmt = con->createStatement();
+	res = stmt->executeQuery("SELECT id,nome from bonotto_operadora;");
+	while (res->next()) {
+		nomes.push_back(res->getString("nome"));
+		ids.push_back(res->getInt("id"));
+	}
+	if (ids.empty()) {
+		delete res;
+		delete stmt;
+		throw "É necessário ter ao menos uma Operadora cadastrada";
+	}
+
+	for (size_t i = 0; i < ids.size(); i++) {
+		std::cout << "Id: " << ids.at(i) << " Operadora: " << nomes.at(i)
+				<< std::endl;
+	}
+	std::cout << "Digite o id para quem deseja atribuir o Número" << std::endl;
+	std::string read;
+	std::string serial;
+	std::getline(std::cin, read);
+	int item = atoi(read.c_str());
+	if (std::find(ids.begin(), ids.end(), item) != ids.end()) {
+		stmt->execute("INSERT INTO bonotto_numero (numero,operadora) "
+				"VALUES ('" + numero + "','" + read + "');");
+	} else {
+		delete res;
+		delete stmt;
+		throw "Opção invalida";
+	}
+	delete res;
+	delete stmt;
+}
 void Database::cadastrarIMEI(std::string imei) {
-	std::string pessoa;
 	sql::Statement *stmt;
 	sql::ResultSet *res;
 	std::vector<int> ids;
@@ -65,22 +104,23 @@ void Database::cadastrarIMEI(std::string imei) {
 		nomes.push_back(res->getString("nome"));
 		ids.push_back(res->getInt("id"));
 	}
-	if(ids.empty()){
+	if (ids.empty()) {
 		delete res;
-			delete stmt;
+		delete stmt;
 		throw "É necessário ter ao menos uma pessoa cadastrada";
 	}
 
-	std::cout << "Digite o id para quem deseja atribuir o imei" <<  std::endl;
-	for(size_t i=0; i < ids.size(); i++){
-		std::cout << "Id: " << ids.at(i) << " Nome: " << nomes.at(i) << " CPF: "<< cpfs.at(i) << std::endl;
+	std::cout << "Digite o id para quem deseja atribuir o imei" << std::endl;
+	for (size_t i = 0; i < ids.size(); i++) {
+		std::cout << "Id: " << ids.at(i) << " Nome: " << nomes.at(i) << " CPF: "
+				<< cpfs.at(i) << std::endl;
 	}
-	std::string read,id;
-	std::getline(std::cin,read);
-	int item= atoi(read.c_str());
-	if(std::find(ids.begin(), ids.end(), item) != ids.end()){
+	std::string read, id;
+	std::getline(std::cin, read);
+	int item = atoi(read.c_str());
+	if (std::find(ids.begin(), ids.end(), item) != ids.end()) {
 		stmt->execute("INSERT INTO bonotto_imei (proprietario,numeroSerial) "
-				"VALUES ('"+read+"','"+imei+"');");
+				"VALUES ('" + read + "','" + imei + "');");
 	} else {
 		delete res;
 		delete stmt;
@@ -90,7 +130,6 @@ void Database::cadastrarIMEI(std::string imei) {
 	delete stmt;
 }
 void Database::cadastrarChip(std::string iccid) {
-	std::string pessoa;
 	sql::Statement *stmt;
 	sql::ResultSet *res;
 	std::vector<int> ids;
@@ -101,23 +140,57 @@ void Database::cadastrarChip(std::string iccid) {
 		imeis.push_back(res->getString("numeroSerial"));
 		ids.push_back(res->getInt("id"));
 	}
-	if(ids.empty()){
+	if (ids.empty()) {
 		delete res;
 		delete stmt;
 		throw "É necessário ter ao menos um IMEI cadastrado";
 	}
 
-	for(size_t i=0; i < ids.size(); i++){
-		std::cout << "Id: " << ids.at(i) << " IMEI: " << imeis.at(i) << std::endl;
+	for (size_t i = 0; i < ids.size(); i++) {
+		std::cout << "Id: " << ids.at(i) << " IMEI: " << imeis.at(i)
+				<< std::endl;
 	}
-	std::cout << "Digite o id para quem deseja atribuir o Chip" <<  std::endl;
+	std::cout << "Digite o id do IMEI para qual deseja atribuir o Chip"
+			<< std::endl;
 	std::string read;
 	std::string serial;
-	std::getline(std::cin,read);
-	int item= atoi(read.c_str());
-	if(std::find(ids.begin(), ids.end(), item) != ids.end()){
-		stmt->execute("INSERT INTO bonotto_chip (associacao,iccid) "
-				"VALUES ('"+read+"','"+iccid+"');");
+	std::string imeiId;
+	std::getline(std::cin, read);
+	int item = atoi(read.c_str());
+	if (std::find(ids.begin(), ids.end(), item) != ids.end()) {
+		imeiId = read;
+		delete res;
+		delete stmt;
+	} else {
+		delete res;
+		delete stmt;
+		throw "Opção invalida";
+	}
+	ids.clear();
+	imeis.clear();
+	stmt = con->createStatement();
+	res = stmt->executeQuery("SELECT id, numero from bonotto_numero;");
+	while (res->next()) {
+		imeis.push_back(res->getString("numero"));
+		ids.push_back(res->getInt("id"));
+	}
+	if (ids.empty()) {
+		delete res;
+		delete stmt;
+		throw "É necessário ter ao menos um Número cadastrado";
+	}
+
+	for (size_t i = 0; i < ids.size(); i++) {
+		std::cout << "Id: " << ids.at(i) << " Número: " << imeis.at(i)
+				<< std::endl;
+	}
+	std::cout << "Digite o id do Número para qual deseja atribuir o Chip"
+			<< std::endl;
+	std::getline(std::cin, read);
+	item = atoi(read.c_str());
+	if (std::find(ids.begin(), ids.end(), item) != ids.end()) {
+		stmt->execute("INSERT INTO bonotto_chip (iccid,vinculo,associacao) "
+				"VALUES ('" + iccid + "','" + read + "','" + imeiId + "');");
 	} else {
 		delete res;
 		delete stmt;
@@ -128,7 +201,6 @@ void Database::cadastrarChip(std::string iccid) {
 
 }
 void Database::cadastrarPlano(std::string plano) {
-	std::string pessoa;
 	sql::Statement *stmt;
 	sql::ResultSet *res;
 	std::vector<int> ids;
@@ -139,23 +211,24 @@ void Database::cadastrarPlano(std::string plano) {
 		nomes.push_back(res->getString("nome"));
 		ids.push_back(res->getInt("id"));
 	}
-	if(ids.empty()){
+	if (ids.empty()) {
 		delete res;
 		delete stmt;
 		throw "É necessário ter ao menos uma Operadora cadastrada";
 	}
 
-	for(size_t i=0; i < ids.size(); i++){
-		std::cout << "Id: " << ids.at(i) << " Operadora: " << nomes.at(i) << std::endl;
+	for (size_t i = 0; i < ids.size(); i++) {
+		std::cout << "Id: " << ids.at(i) << " Operadora: " << nomes.at(i)
+				<< std::endl;
 	}
-	std::cout << "Digite o id para quem deseja atribuir o Plano" <<  std::endl;
+	std::cout << "Digite o id para quem deseja atribuir o Plano" << std::endl;
 	std::string read;
 	std::string serial;
-	std::getline(std::cin,read);
-	int item= atoi(read.c_str());
-	if(std::find(ids.begin(), ids.end(), item) != ids.end()){
+	std::getline(std::cin, read);
+	int item = atoi(read.c_str());
+	if (std::find(ids.begin(), ids.end(), item) != ids.end()) {
 		stmt->execute("INSERT INTO bonotto_plano (operadora,tipo) "
-				"VALUES ('"+read+"','"+plano+"');");
+				"VALUES ('" + read + "','" + plano + "');");
 	} else {
 		delete res;
 		delete stmt;
@@ -165,18 +238,262 @@ void Database::cadastrarPlano(std::string plano) {
 	delete stmt;
 
 }
-void Database::importFromFile(const std::string& filePath){
+
+void Database::cadastrarContrato() {
 	sql::Statement *stmt;
-	std::ifstream sqlFile(filePath.c_str());
-	std::stringstream buffer;
-	buffer << sqlFile.rdbuf();
-	std::string sql{buffer.str()};
-	sql.erase (std::remove(sql.begin(), sql.end(), '\n'), sql.end());
+	sql::ResultSet *res;
+	std::vector<int> ids;
+	std::vector<string> PessoaPlanoOperadora;
 	stmt = con->createStatement();
-	std::cout << sql << std::endl;
-	stmt->execute(sql);
+	res = stmt->executeQuery("SELECT id,nome from bonotto_pessoa;");
+	while (res->next()) {
+		PessoaPlanoOperadora.push_back(res->getString("nome"));
+		ids.push_back(res->getInt("id"));
+	}
+	if (ids.empty()) {
+		delete res;
+		delete stmt;
+		throw "É necessário ter ao menos uma Pessoa cadastrada cadastrado";
+	}
+
+	for (size_t i = 0; i < ids.size(); i++) {
+		std::cout << "Id: " << ids.at(i) << " Nome: "
+				<< PessoaPlanoOperadora.at(i) << std::endl;
+	}
+	std::cout << "Digite o id da pessoa que será o contratante." << std::endl;
+	std::string read;
+	std::string pessoaId;
+	std::getline(std::cin, read);
+	int item = atoi(read.c_str());
+	if (std::find(ids.begin(), ids.end(), item) != ids.end()) {
+		pessoaId = read;
+		delete res;
+		delete stmt;
+	} else {
+		delete res;
+		delete stmt;
+		throw "Opção invalida";
+	}
+	ids.clear();
+	PessoaPlanoOperadora.clear();
+	stmt = con->createStatement();
+	res = stmt->executeQuery("SELECT id, tipo from bonotto_plano;");
+	while (res->next()) {
+		PessoaPlanoOperadora.push_back(res->getString("tipo"));
+		ids.push_back(res->getInt("id"));
+	}
+	if (ids.empty()) {
+		delete res;
+		delete stmt;
+		throw "É necessário ter ao menos um Plano cadastrado";
+	}
+
+	for (size_t i = 0; i < ids.size(); i++) {
+		std::cout << "Id: " << ids.at(i) << " Plano: "
+				<< PessoaPlanoOperadora.at(i) << std::endl;
+	}
+	std::string planoId;
+	std::cout << "Digite o id do Plano que será contratado." << std::endl;
+	std::getline(std::cin, read);
+	item = atoi(read.c_str());
+	if (std::find(ids.begin(), ids.end(), item) != ids.end()) {
+		planoId = read;
+	} else {
+		delete res;
+		delete stmt;
+		throw "Opção invalida";
+	}
+	ids.clear();
+	PessoaPlanoOperadora.clear();
+	stmt = con->createStatement();
+	res = stmt->executeQuery("SELECT id, nome from bonotto_operadora;");
+	while (res->next()) {
+		PessoaPlanoOperadora.push_back(res->getString("nome"));
+		ids.push_back(res->getInt("id"));
+	}
+	if (ids.empty()) {
+		delete res;
+		delete stmt;
+		throw "É necessário ter ao menos uma Operadora cadastrada";
+	}
+
+	for (size_t i = 0; i < ids.size(); i++) {
+		std::cout << "Id: " << ids.at(i) << " Operadora: "
+				<< PessoaPlanoOperadora.at(i) << std::endl;
+	}
+	std::cout << "Digite o id da Operadora que será contratada." << std::endl;
+	std::getline(std::cin, read);
+	item = atoi(read.c_str());
+	if (std::find(ids.begin(), ids.end(), item) != ids.end()) {
+		stmt->execute(
+				"INSERT INTO bonotto_contrato1 (contratante, operadora, plano) "
+						"VALUES ('" + pessoaId + "','" + read + "','" + planoId
+						+ "');");
+	} else {
+		delete res;
+		delete stmt;
+		throw "Opção invalida";
+	}
+
+	delete res;
 	delete stmt;
 
+}
+void Database::atualizarContrato() {
+	sql::Statement *stmt;
+	sql::ResultSet *res;
+	std::vector<int> ids;
+	std::vector<string> contratante;
+	std::vector<string> operadora;
+	std::vector<string> plano;
+	stmt = con->createStatement();
+	res = stmt->executeQuery(
+			"SELECT id,contratante,operadora,plano from bonotto_contrato1;");
+	while (res->next()) {
+		contratante.push_back(res->getString("contratante"));
+		operadora.push_back(res->getString("operadora"));
+		plano.push_back(res->getString("plano"));
+		ids.push_back(res->getInt("id"));
+	}
+	delete res;
+	delete stmt;
+	if (ids.empty()) {
+		throw "É necessário ter ao menos um Contrato cadastrado";
+	}
+
+	for (size_t i = 0; i < ids.size(); i++) {
+		std::cout << "Id: " << ids.at(i) << " Contratante: "
+				<< getPessoaNameFromId(contratante.at(i)) << std::endl
+				<< " Operadora: " << getOperadoraNameFromId(operadora.at(i))
+				<< std::endl << " Plano: " << getPlanoTipoFromId(plano.at(i))
+				<< std::endl;
+	}
+
+	std::cout << "Digite o Id do contrato que deseja alterar" << std::endl;
+	std::string read;
+	std::string contratoId;
+	std::getline(std::cin, read);
+	int item = atoi(read.c_str());
+	if (std::find(ids.begin(), ids.end(), item) != ids.end()) {
+		contratoId=read;
+		std::cout << "Alterar:" << std::endl;
+		std::cout << "1 - Contratante" << std::endl;
+		std::cout << "2 - Operadora" << std::endl;
+		std::cout << "3 - Plano" << std::endl;
+		std::getline(std::cin, read);
+		int choice = atoi(read.c_str());
+		std::vector<string> cpfs;
+		switch (choice) {
+		case 1:
+			cpfs.clear();
+			contratante.clear();
+			ids.clear();
+			stmt = con->createStatement();
+			res = stmt->executeQuery(
+					"SELECT id, nome, documento from bonotto_pessoa;");
+			while (res->next()) {
+				cpfs.push_back(res->getString("documento"));
+				contratante.push_back(res->getString("nome"));
+				ids.push_back(res->getInt("id"));
+			}
+			delete res;
+			delete stmt;
+			if (ids.empty()) {
+				throw "É necessário ter ao menos uma pessoa cadastrada";
+			}
+			for (size_t i = 0; i < ids.size(); i++) {
+				std::cout << "Id: " << ids.at(i) << " Nome: "
+						<< contratante.at(i) << " CPF: " << cpfs.at(i)
+						<< std::endl;
+			}
+			std::cout << "Digite o id do novo Contratante" << std::endl;
+			std::getline(std::cin, read);
+			item = atoi(read.c_str());
+			if (std::find(ids.begin(), ids.end(), item) != ids.end())
+				executeSQL(
+						"UPDATE bonotto_contrato1 set contratante = '" + read
+								+ "' where id ='" + contratoId + "';");
+			else
+				throw "Opção invalida";
+			break;
+		case 2:
+			ids.clear();
+			operadora.clear();
+			stmt = con->createStatement();
+			res = stmt->executeQuery("SELECT id, nome from bonotto_operadora;");
+			while (res->next()) {
+				operadora.push_back(res->getString("nome"));
+				ids.push_back(res->getInt("id"));
+			}
+			delete res;
+			delete stmt;
+			if (ids.empty()) {
+
+				throw "É necessário ter ao menos uma Operadora cadastrada";
+			}
+
+			for (size_t i = 0; i < ids.size(); i++) {
+				std::cout << "Id: " << ids.at(i) << " Operadora: "
+						<< operadora.at(i) << std::endl;
+			}
+			std::cout << "Digite o id da Nova Operadora" << std::endl;
+			std::getline(std::cin, read);
+			item = atoi(read.c_str());
+			if (std::find(ids.begin(), ids.end(), item) != ids.end())
+				executeSQL(
+						"UPDATE bonotto_contrato1 set operadora = '" + read
+								+ "' where id ='" + contratoId + "';");
+			else
+				throw "Opção invalida";
+			break;
+		case 3:
+			ids.clear();
+			plano.clear();
+			stmt = con->createStatement();
+			res = stmt->executeQuery("SELECT id, tipo from bonotto_plano;");
+			while (res->next()) {
+				plano.push_back(res->getString("tipo"));
+				ids.push_back(res->getInt("id"));
+			}
+			delete res;
+			delete stmt;
+			if (ids.empty()) {
+				throw "É necessário ter ao menos um Plano cadastrado";
+			}
+
+			for (size_t i = 0; i < ids.size(); i++) {
+				std::cout << "Id: " << ids.at(i) << " Plano: " << plano.at(i)
+						<< std::endl;
+			}
+			std::cout << "Digite o id do novo Plano" << std::endl;
+			std::getline(std::cin, read);
+			item = atoi(read.c_str());
+			if (std::find(ids.begin(), ids.end(), item) != ids.end())
+				executeSQL(
+						"UPDATE bonotto_contrato1 set plano = '" + read
+								+ "' where id ='" + contratoId + "';");
+			else
+				throw "Opção invalida";
+			break;
+
+		default:
+			delete res;
+			delete stmt;
+			throw "Opção invalida";
+			break;
+		}
+	} else {
+		throw "Opção invalida";
+	}
+}
+
+void Database::importFromFile(const std::string& filePath) {
+	std::string comando { "mysql -h " + host + " -u " + user + " -p" + pass
+			+ " " + schema + " < " + filePath };
+	if (system(comando.c_str()) == 0)
+		std::cout << "Ok" << std::endl;
+	else
+		throw "Erro ao executar script";
 }
 
 int Database::getOperadoraIdFromName(const std::string& nome) {
@@ -184,7 +501,9 @@ int Database::getOperadoraIdFromName(const std::string& nome) {
 	sql::ResultSet *res;
 	int id;
 	stmt = con->createStatement();
-	res = stmt->executeQuery("SELECT id from bonotto_operadora where bonotto_operadora ='"+nome+"'");
+	res = stmt->executeQuery(
+			"SELECT id from bonotto_operadora where bonotto_operadora ='" + nome
+					+ "'");
 	if (res->next()) {
 		id = res->getInt("id");
 	}
@@ -194,9 +513,53 @@ int Database::getOperadoraIdFromName(const std::string& nome) {
 
 }
 
+std::string Database::getOperadoraNameFromId(std::string id) {
+	sql::Statement *stmt;
+	sql::ResultSet *res;
+	std::string nome;
+	stmt = con->createStatement();
+	res = stmt->executeQuery(
+			"SELECT nome from bonotto_operadora where id ='" + id + "' ;");
+	if (res->next()) {
+		nome = res->getString("nome");
+	}
+	delete res;
+	delete stmt;
+	return nome;
+}
+std::string Database::getPlanoTipoFromId(std::string id) {
+	sql::Statement *stmt;
+	sql::ResultSet *res;
+	std::string tipo;
+	stmt = con->createStatement();
+	res = stmt->executeQuery(
+			"SELECT tipo from bonotto_plano where id ='" + id + "' ;");
+	if (res->next()) {
+		tipo = res->getString("tipo");
+	}
+	delete res;
+	delete stmt;
+	return tipo;
+
+}
+std::string Database::getPessoaNameFromId(std::string id) {
+	sql::Statement *stmt;
+	sql::ResultSet *res;
+	std::string nome;
+	stmt = con->createStatement();
+	res = stmt->executeQuery(
+			"SELECT nome from bonotto_pessoa where id ='" + id + "' ;");
+	if (res->next()) {
+		nome = res->getString("nome");
+	}
+	delete res;
+	delete stmt;
+	return nome;
+
+}
+
 Database::~Database() {
-	  delete con;
-	// TODO Auto-generated destructor stub
+	delete con;
 }
 
 } /* namespace bcd29008 */
