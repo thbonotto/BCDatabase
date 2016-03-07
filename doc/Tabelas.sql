@@ -24,7 +24,7 @@ create table if not exists erb (
 );
 
 create table if not exists numero (
-  id int unsigned primary key,
+  id int unsigned auto_increment primary key,
   numero int unsigned unique,
   operadora tinyint unsigned,
   credito int,
@@ -47,7 +47,7 @@ create table if not exists imei (
 );
 
 create table if not exists chip (
-  id tinyint unsigned auto_increment primary key,
+  id int unsigned auto_increment primary key,
   iccid varchar(20) not null unique,
   registro int unsigned,
   vinculo int unsigned,
